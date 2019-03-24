@@ -117,7 +117,21 @@ window.onload = function() {
         var book  = json[n];
         list.push(book)
     }
+    
     create();
+    create_button();
+}
+
+function create_button() {
+    var element = document.createElement("button");
+    
+    element.style.position = "absolute";
+    element.style.height = 300;
+    element.style.left   = "25%";
+    element.style.top    = "40%";
+    
+    element.addEventListener("click", create());
+    document.body.appendChild(element)
 }
 
 function create() {
