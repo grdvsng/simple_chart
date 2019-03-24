@@ -126,12 +126,18 @@ function create_button() {
     var element = document.createElement("button");
     
     element.style.position = "absolute";
-    element.style.height = 300;
-    element.style.left   = "25%";
-    element.style.top    = "40%";
+    element.style.height   = 50;
+    element.style.left     = "270px";
+    element.style.top      = "2%";
+    element.style.fontSize = "2em";
+    element.innerHTML      = "Next Chart >";
     
-    element.addEventListener("click", create());
     document.body.appendChild(element)
+    element.addEventListener("click", function() {
+        create(); 
+        document.body.removeChild(element);
+        create_button();
+    });
 }
 
 function create() {
