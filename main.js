@@ -98,18 +98,20 @@ ChrtUni = {
 	},
 	
 	line_chart: {
-		type:	    		     "canvas",
+		type:	    		     "div",
         
 		lineMargin: 		     [0.25, 0.5, 0.75],
 		
 		style: {
-			position: 	         "absolute",
+			position: 	         "relative",
             
-			left:	 	         "9%",
-            top:          		 "9%",
+			left:	 	         "5%",
+            top:          		 "5%",
+		
+			paddingRight:        "7px",
 			
-			height:		 		 "57%",
-			width: 			     "80%",
+			height:		 		 "60%",
+			width: 			     "90%",
 		}
 	},
 	
@@ -131,8 +133,8 @@ ChrtUni = {
 		style: {
 			position: 	         "absolute",
                 
-			top:		         "2.8%",
-			left:	     	     "9%",
+			top:		         "3%",
+			left:	     	     "6%",
 			
 			padding:             "0% 1% 0% 1%",
 			
@@ -156,12 +158,12 @@ ChrtUni = {
         
         style: {
             position:        	"absolute",
-			top: 			 	"65%",
+			top: 			 	"65.5%",
 			
             padding:            "0% 0% 0% 0%",
             
             fontWeight:         "400",
-            fontSize:        	"1.2em",
+            fontSize:        	"1em",
         }
     },
 	
@@ -171,7 +173,7 @@ ChrtUni = {
         style: {
             position:        	"absolute",
             
-            right:              "92%",
+            right:              "95.5%",
             
             fontWeight:         "700",
             textAlign:          "center",
@@ -206,8 +208,8 @@ ChrtUni = {
 		style:  {
 			position:           "relative",
 			
-			top:		        "72%",
-			left: 			 	"10%",
+			top:		        "10%",
+			left: 			 	"5%",
             
             fontSize:           "2.3em",
             fontWeight:         "bold",
@@ -405,7 +407,7 @@ class BaseGeometry {
 		return result;
 	}
     
-    _top_formula(master, value, constant) {
+    _top_formula(master, value, constant, with_master = true) {
 		/* Class MyChart method _X_line_create.
 
 	   require parameters: 
@@ -418,11 +420,14 @@ class BaseGeometry {
 
 		*/
 		
-		var procent, result;
+		var procent, result, special;
 		var rect = master.getBoundingClientRect();
 		
+		if (with_master){special = rect.top}
+		else            {special = 0}
+		
 		procent = rect.height / 100;
-		result  = (rect.bottom - (procent*(value / (constant/100))));
+		result  = ((rect.bottom - special) - (procent*(value / (constant/100))));
 
 		return result;
 	}
@@ -475,13 +480,12 @@ class Error {
 
 
 class MyChart {
-    converter = new JsonConverter()
+    converter = new JsonConverter();
     
     constructor(
 			height = screen.height * 0.9, 
 			width  = screen.width,
 			style  = "white", 
-			svg    = document.getElementById("BaseSVG"),
 			master = document.getElementsByTagName("body")[0]
 		) {
 		/* Class MyChart Method constructor.
@@ -489,8 +493,7 @@ class MyChart {
 		       optional parameters: 
 			       height - int - new frame height;
 			       width  - int - new frame width;
-			       style  - str - chart colors style from ChrtParems diction;
-			       svg    - str - id object SVG from page.
+			       style  - str - chart colors style from ChrtParems diction.
 			   
 			   description:
 				    constructor, create base carcass for chart.
@@ -544,14 +547,16 @@ class MyChart {
 		
 		var chart, linecolor, lineMargin, cursor;
 		
-        chart      = this._create_element("line_chart", this.plate);  	// Chart.						// Context for painting.	
+        chart      = this._create_element("line_chart", this.plate);  	// Chart.
         linecolor  = this.ChrtParems["line_chart"]["lineColor"];    // Color of  chart line.
 		lineMargin = this.ChrtParems["line_chart"]["lineMargin"];	// Margin on chart lines.
 		
-		for (var elem in lineMargin) {
+		/* for (var elem in lineMargin) {
 			this._paint(chart, chart.height * lineMargin[elem], chart.width,  linecolor);
 			this._paint(chart, chart.width  * lineMargin[elem], chart.height, linecolor, false);
 		} // Paint chart for chart.
+		*/
+		
 		
 		this.type = "lines";
 		this.polylines = [];
@@ -682,18 +687,18 @@ class MyChart {
     
     _points_create(list) {
         var bottom = this.chart.getBoundingClientRect().bottom,
-            left   = this.chart.getBoundingClientRect().left * 0.93,
+            left   = 0,
             coef   = this.geometry.left_coeff(this.width, eval(this.chart.style.width.split("%")[0]), list.length),
             points = [],
             max    = Math.max(...list);
         
-        if (max > 100000) {left *= 0.98}
+        this.chart.style.paddignRight = coef;
         for (var n in list) {
-            var node = this._create_element("node" ,this.plate);
+            var node = this._create_element("node", this.chart);
             
             node.value      = list[n];
             node.style.left = left;
-            node.style.top  = this.geometry._top_formula(this.chart, list[n], this.maxVal)*0.98;
+            node.style.top  = this.geometry._top_formula(this.chart, list[n], this.maxVal);
 
             left += coef;
             points.push(node);
@@ -703,19 +708,19 @@ class MyChart {
     }
     
     _Y_line_create(diction, type="value_node") {
-        var parse  = this.converter._vals_list(diction),
-            curent = parse[1],
+        var parsed  = this.converter._vals_list(diction),
+            curent = parsed[1],
             rect   = this.chart.getBoundingClientRect(),
             nodes  = [];
             
         this.maxVal = curent[curent.length - 1];
-        this.minVal = parse[0];
         
         for (var i in curent) {
             var node = this._create_element(type,  this.plate, curent[i]),
                 coef = curent[i],
-                top  = this.geometry._top_formula(this.chart, coef, this.maxVal)*0.93;
-            
+                top  = this.geometry._top_formula(this.chart, coef, this.maxVal, false);
+                if (i == 0) {top *= 0.95;}
+                
             node.style.top = top;
             nodes.push(node);
         }
@@ -755,7 +760,7 @@ class MyChart {
 		
 			   require parameters: 
 				   diction - object  - array with nodes data;
-				   point   - number  -start position.
+				   point   - number  - start position.
                    
 			   description: 
 				   Create lines element.
